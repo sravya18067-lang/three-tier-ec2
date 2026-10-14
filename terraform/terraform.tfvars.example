@@ -1,0 +1,4 @@
+region      = "ap-south-1"
+key_name    = "my-existing-keypair"
+admin_cidr  = "203.0.113.25/32"   # YOUR public IP (curl ifconfig.me) + /32
+db_password = "ChangeThisPass123" # alphanumeric, 12+ chars

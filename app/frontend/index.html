@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Three-Tier App on AWS EC2</title>
+<style>
+  body{font-family:system-ui,sans-serif;max-width:640px;margin:40px auto;padding:0 16px;color:#222}
+  h1{font-size:1.5rem} .badge{font-size:.8rem;padding:2px 8px;border-radius:99px;background:#e6f4ea;color:#137333}
+  .bad{background:#fce8e6;color:#c5221f}
+  form{display:flex;gap:8px;margin:16px 0} input{flex:1;padding:8px}
+  button{padding:8px 14px;cursor:pointer}
+  li{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee}
+</style>
+</head>
+<body>
+<h1>Three-Tier App on AWS EC2 <span id="status" class="badge">checking…</span></h1>
+<p>Frontend (nginx) → Backend (Node/Express) → Database (PostgreSQL)</p>
+<form id="f"><input id="t" placeholder="New task" required><button>Add</button></form>
+<ul id="list"></ul>
+<script>
+const api = (p, o) => fetch('/api' + p, o).then(r => r.json());
+async function load(){
+  try{
+    const h = await api('/health');
+    const s = document.getElementById('status');
+    s.textContent = h.db ? 'DB connected' : 'DB down'; s.className = 'badge' + (h.db ? '' : ' bad');
+    const tasks = await api('/tasks');
+    document.getElementById('list').innerHTML = tasks.map(t =>
+      `<li><span>${t.title.replace(/</g,'&lt;')}</span><button onclick="del(${t.id})">Delete</button></li>`).join('');
+  }catch(e){ const s=document.getElementById('status'); s.textContent='backend down'; s.className='badge bad'; }
+}
+async function del(id){ await api('/tasks/' + id, {method:'DELETE'}); load(); }
+document.getElementById('f').addEventListener('submit', async e => {
+  e.preventDefault();
+  const i = document.getElementById('t');
+  await api('/tasks', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({title:i.value})});
+  i.value=''; load();
+});
+load();
+</script>
+</body>
+</html>
